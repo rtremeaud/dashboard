@@ -1,0 +1,233 @@
+---
+title: "Sleep Dashboard "
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+    theme: 
+      bg: "#101010"
+      fg: "#f3f6f4" 
+      primary: "#ED79F9"
+    logo: logo.png
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readr)
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(lubridate)
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+library(plotly)
+library(GGally)
+setwd("~/Desktop/module_3/all_data")
+
+Lorena <- read_csv("Lorena_converted (3).csv")
+Lorena$ID<-"W1"
+Martin <- read_csv2("Martin.csv")
+Martin$ID<-"M1"
+Nely <- read_csv2("Nely.csv")
+Nely$ID<-"W2"
+dd<-merge(Nely, Martin, all = TRUE)
+dd<-merge(dd, Lorena, all = TRUE)
+
+```
+
+Overview
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+###  Global sleep overview
+
+```{r}
+dd1<-dd[,c(1,11,12,13,14,98)]
+dd1<-as.data.frame(dd1)
+dd1<-melt(dd1, id=c("calendar_date","ID"))
+p<-ggplot(dd1, aes(x=calendar_date,y=round(value*100),group=variable, fill=variable)) +
+  geom_density(stat = "identity",alpha=.6)+theme_ipsum() +scale_fill_ipsum()+
+  labs(x = "Date",
+       y = "Sleep in %",
+       color = "Sleep variable")+facet_grid(~ID)
+ggplotly(p)%>% layout(legend = list(orientation = "h", y = -0.2))
+```
+>y variable defined on the left remains the same
+
+Row
+-----------------------------------------------------------------------
+
+### total sleep overview
+
+```{r }
+p<-ggplot(dd, aes(x = calendar_date, y = total_sleep_hours)) +
+  geom_line()+geom_point()+geom_smooth()+theme_ipsum()+facet_grid(~ID)
+ggplotly(p)%>% layout(legend = list(orientation = "h", y = -0.2))
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### total sleep overview (by day of week)
+
+```{r }
+dd$day<-weekdays(dd$calendar_date,abbreviate = TRUE)  
+dd$day<-as.factor(dd$day)
+dd$day2<-dd$day
+levels(dd$day2) <- c("Sunday","Thursday", "Monday", "Tuesday", "Wednesday", "Saturday", 
+             "Friday")
+dd$day2 <- ordered(dd$day2, levels =c("Monday","Tuesday", "Wednesday","Thursday", "Friday",  "Saturday", "Sunday"))
+p<-dd %>%
+  ggplot( aes(x=day2,y = total_sleep_hours,fill=ID)) +
+  geom_boxplot() + theme_ipsum()  +scale_fill_ipsum()
+p %>%
+  ggplotly() %>%
+  layout(boxmode = "group")
+```
+
+###  deep sleep variation  (by day of week)
+
+```{r }
+p<-dd %>%
+  ggplot( aes(x=day2,y = deep_sleep_percentage,fill=ID)) +
+  geom_boxplot() + theme_ipsum()  +scale_fill_ipsum()
+p %>%
+  ggplotly() %>%
+  layout(boxmode = "group")
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+
+###  _stress_awake  (by day of week)
+
+```{r }
+p<-dd %>%
+  ggplot( aes(x=day2,y = dd$`%_stress_awake`,fill=ID)) +
+  geom_boxplot() + theme_ipsum()  +scale_fill_ipsum()
+p %>%
+  ggplotly() %>%
+  layout(boxmode = "group")
+
+```
+
+###  _stress_awake  
+
+```{r }
+p<-ggplot(dd, aes(x=calendar_date,y=round(median_stress_awake))) +
+  geom_smooth()+facet_grid(~ID)+theme_ipsum()
+
+  ggplotly(p) 
+
+```
+
+
+Corr_Night analysis 
+=======================================================================
+
+Row 
+-----------------------------------------------------------------------
+
+### **Influence from Median_hr_sleep on sleep quality**
+
+```{r }
+
+p<-  ggplot(dd,aes(x=perceived_sleep_quality, y=median_hr_sleep, fill=factor(perceived_sleep_quality))) +
+  geom_boxplot() +geom_point()+
+  scale_fill_ipsum()+
+  labs(x = "perceived_sleep_quality",
+       y = "median_hr_sleep",
+       color = "Sleep variable")+ theme_ipsum() +scale_fill_ipsum()
+ggplotly(p)%>% layout(legend = list(orientation = "h", y = -0.2))
+
+```
+
+### **Influence from median_stress_sleep on sleep quality**
+
+```{r}
+
+p<-  ggplot(dd,aes(x=perceived_sleep_quality, y=median_stress_sleep, fill=factor(perceived_sleep_quality))) +
+  geom_boxplot() +geom_point()+
+  scale_fill_ipsum()+
+  labs(x = "perceived_sleep_quality",
+       y = "median_stress_sleep",
+       color = "Sleep variable")+ theme_ipsum() +scale_fill_ipsum()
+ggplotly(p)%>% layout(legend = list(orientation = "h", y = -0.2))
+
+```
+
+
+
+Row 
+-----------------------------------------------------------------------
+
+
+### **Correlation  stress & HR**
+
+```{r}
+
+p<-ggscatter(dd, x = "median_stress_sleep", y = "median_hr_sleep", color="ID",
+          add = "reg.line", conf.int = FALSE, 
+          cor.coef = FALSE, cor.method = "pearson")+
+  stat_cor(aes(color = ID), p.accuracy = 0.001, r.accuracy = 0.01)+ theme_ipsum()+scale_fill_ipsum()
+p
+```
+
+> The p-value of the test is less than the significance level alpha = 0.05. We can conclude that hr sleep and stress sleep are significantly correlated with a correlation coefficient beetween 0.64--0.88.
+
+### **Correlation vigorous_activity_hours & total_sleep_hours**
+
+```{r}
+
+p<-ggscatter(dd, x = "vigorous_activity_hours", y = "total_sleep_hours", color="ID",
+          add = "reg.line", conf.int = FALSE, 
+          cor.coef = FALSE, cor.method = "pearson")+
+  stat_cor(aes(color = ID), p.accuracy = 0.001, r.accuracy = 0.01)+ theme_ipsum()+scale_fill_ipsum()
+p
+```
+
+>The p-value of the test is more than the significance level alpha = 0.05. We can conclude that variable are not significantly correlated .
+
+### **Correlation steps & total_sleep_hours**
+
+```{r}
+
+p<-ggscatter(dd, x = "steps", y = "total_sleep_hours", color="ID",
+          add = "reg.line", conf.int = FALSE, 
+          cor.coef = FALSE, cor.method = "pearson")+
+  stat_cor(aes(color = ID), p.accuracy = 0.001, r.accuracy = 0.01)+ theme_ipsum()+scale_fill_ipsum()
+p
+```
+
+>The p-value of the test is more than the significance level alpha = 0.05. We can conclude that variable are not significantly correlated .
+
+
+
+
+Global corr analysis 
+=======================================================================
+
+
+Row {}
+-----------------------------------------------------------------------
+
+```{r}
+dd2<-dd[,c(6,42,59,69,69,94:98)]
+ggpairs(dd2)
+```
+
+Row {}
+-----------------------------------------------------------------------
+
+```{r}
+dd2<-dd[,c(6,12,27,94:96)]
+ggpairs(dd2)
+```
