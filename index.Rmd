@@ -43,7 +43,7 @@ Overview
 Row
 -----------------------------------------------------------------------
 
-###  Global sleep overview
+###  Global sleep overview (3 subjects Night Owl Early Bird Sleepy Bear)
 
 ```{r}
 dd1<-dd[,c(1,11,12,13,14,98)]
@@ -140,14 +140,14 @@ Row
 
 ```{r }
 
-p<-  ggplot(dd,aes(x=perceived_sleep_quality, y=median_hr_sleep, fill=factor(perceived_sleep_quality))) +
+p<-  ggplot(dd,aes(x=perceived_sleep_quality, y=median_hr_sleep, fill=factor(ID))) +
   geom_boxplot() +geom_point()+
   scale_fill_ipsum()+
-  labs(x = "perceived_sleep_quality",
+  labs(x = "perceived_sleep_quality by subject",
        y = "median_hr_sleep",
        color = "Sleep variable")+ theme_ipsum() +scale_fill_ipsum()
-ggplotly(p)%>% layout(legend = list(orientation = "h", y = -0.2))
-
+ggplotly(p)%>%
+  layout(boxmode = "group")
 ```
 
 ### **Influence from median_stress_sleep on sleep quality**
@@ -210,24 +210,59 @@ p
 >The p-value of the test is more than the significance level alpha = 0.05. We can conclude that variable are not significantly correlated .
 
 
+Row 
+-----------------------------------------------------------------------
 
+### **Correlation %_high_stress_30min_before_bedtime & total_sleep_hours**
+
+```{r}
+
+p<-ggscatter(dd, x = "%_high_stress_30min_before_bedtime", y = "total_sleep_hours", color="ID",
+          add = "reg.line", conf.int = FALSE, 
+          cor.coef = FALSE, cor.method = "pearson")+
+  stat_cor(aes(color = ID), p.accuracy = 0.001, r.accuracy = 0.01)+ theme_ipsum()+scale_fill_ipsum()
+p
+```
+
+>The p-value of the test is more than the significance level alpha = 0.05. We can conclude that variable are not significantly correlated .
+
+### **Correlation estimated_sleep_time & total_sleep_hours**
+
+```{r}
+
+p<-ggscatter(dd, x = "estimated_sleep_time", y = "total_sleep_hours", color="ID",
+          add = "reg.line", conf.int = FALSE, 
+          cor.coef = FALSE, cor.method = "pearson")+
+  stat_cor(aes(color = ID), p.accuracy = 0.001, r.accuracy = 0.01)+ theme_ipsum()+scale_fill_ipsum()
+p
+```
+
+>The p-value of the test is less (2 participants) than the significance level alpha = 0.05. We can conclude that variable are significantly correlated .
 
 Global corr analysis 
 =======================================================================
 
 
-Row {}
+
+Row 
 -----------------------------------------------------------------------
 
-```{r}
-dd2<-dd[,c(6,42,59,69,69,94:98)]
+### **Correlation **
+
+```{r }
+
+dd2<-dd[,c(6,42,69,97)]
 ggpairs(dd2)
 ```
 
 Row {}
 -----------------------------------------------------------------------
 
+### **Comparaison beetween Carmon and oura Ring**
+
+
 ```{r}
-dd2<-dd[,c(6,12,27,94:96)]
-ggpairs(dd2)
+
+
+
 ```
