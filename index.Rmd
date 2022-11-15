@@ -5,8 +5,8 @@ output:
     orientation: rows
     vertical_layout: scroll
     theme: 
-      bg: "#101010"
-      fg: "#f3f6f4" 
+      bg: "#ffffff"
+      fg: "#000000" 
       primary: "#ED79F9"
     logo: logo.png
     source_code: embed
@@ -239,7 +239,7 @@ p
 
 >The p-value of the test is less (2 participants) than the significance level alpha = 0.05. We can conclude that variable are significantly correlated .
 
-Global corr analysis 
+Global corr analysis & ML Models
 =======================================================================
 
 
@@ -258,11 +258,53 @@ ggpairs(dd2)
 Row {}
 -----------------------------------------------------------------------
 
-### **Comparaison beetween Carmon and oura Ring**
+### **ML decision tree**
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
+library(rpart)
+library(rpart.plot) 
+library(Metrics)
+## Trainingfsfunktion
+## für Visualisierung (prp)
+## Performance Metriken (accuracy)
+#Test - Train - Split (Details dazu später)
+data<-dd
+##Variable selection
+data<-dd[,c(6,11:16,40:47,69,70,92,97)]
+data$bad_sleep_outlier_binary<-as.factor(data$bad_sleep_outlier_binary)
+#train & test model
+in_train <- sample(nrow(data), trunc(nrow(data) * 2 / 3)) 
+train <- data[in_train,]
+test <- data[-in_train,]
+# Model formul
+L_form <- bad_sleep_outlier_binary ~ .
+model <- rpart(L_form, train,method = "class", minsplit = 10, minbucket = 3)
+model
+prp(model)
+
+rpart.plot(model, extra= 106)
 
 
+```
+
+Row {}
+-----------------------------------------------------------------------
+
+### **ML using glm(  with bad_sleep_outlier_binary ~ ., family = binomial(link = "logit")**
+
+
+```{r message=FALSE, warning=FALSE}
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+dd1<-na.omit(data)
+in_train <- sample(nrow(dd1), trunc(nrow(dd1) * 2 / 3)) 
+train <- dd1[in_train,]
+test <- dd1[-in_train,]
+dd1$bad_sleep_outlier_binary<-as.factor((dd1$bad_sleep_outlier_binary))
+model <- glm(bad_sleep_outlier_binary ~.,family=binomial(link='logit'),data=train)
+summary(model)
+tab_model(model,show.intercept = TRUE)
 
 ```
