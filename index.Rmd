@@ -26,14 +26,14 @@ library(plotly)
 library(GGally)
 setwd("~/Desktop/module_3/all_data")
 
-Lorena <- read_csv("Lorena_converted (3).csv")
-Lorena$ID<-"W1"
-Martin <- read_csv2("Martin.csv")
-Martin$ID<-"M1"
-Nely <- read_csv2("Nely.csv")
-Nely$ID<-"W2"
-dd<-merge(Nely, Martin, all = TRUE)
-dd<-merge(dd, Lorena, all = TRUE)
+subject1 <- read_csv("subject.csv")
+subject1$ID<-"W1"
+subject2 <- read_csv2("subject.csv")
+subject2$ID<-"M1"
+subject3 <- read_csv2("subject.csv")
+subject2$ID<-"W2"
+dd<-merge(subject3, subject2, all = TRUE)
+dd<-merge(dd, subject1, all = TRUE)
 
 ```
 
